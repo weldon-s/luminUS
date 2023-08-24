@@ -1,11 +1,10 @@
 import asyncio
+from json import dump
 from kasa import SmartBulb
 from kasa.discover import Discover
 from random import randint
 from time import sleep
 from typing import Optional
-
-TARGETS = ["10.0.0.218", "10.0.0.122", "10.0.0.62", "10.0.0.128", "10.0.0.237", "10.0.0.52"]
 
 class BulbManager:
     '''
@@ -41,10 +40,50 @@ class BulbManager:
         devices = await Discover.discover(target=target)
 
         return devices[target]
+    
+    @staticmethod
+    async def populate_cache():
+        '''
+        Discover all devices and cache them
+        I'm not sure why, but this version of discover is less reliable so we just get the addresses so we have them, and 
+        then pass in the address for the specific device we want.
+        This implementation also means we don't have to always have the devices loaded; we can just load them when we need them.
+        This should eventually go into some kind of database
+        '''
+        # Try to discover devices
+        devices = await Discover.discover()
+
+        # If we don't find any, try again, waiting 5 seconds in between
+        while len(devices) == 0:
+            print("No devices found. Trying again in 5 seconds...")
+            devices = await Discover.discover()
+            sleep(5)
+
+        data = {}
+
+        for addr, device in devices.items():
+            # We'll just store the alias so we know which address is which device
+            data[addr] = device.alias
+
+        with open("cache.json", "w") as f:
+            dump(data, f, indent=4)
+
+    @staticmethod
+    def get_cached_data():
+        '''
+        Get the cached addresses
+        '''
+        with open("cache.json", "r") as f:
+            data = f.read()
+
+        return data
 
 async def main():
     # We'll have a list of bulb managers
-    managers = [BulbManager(target) for target in TARGETS]
+    # First, get the cached data
+    data = BulbManager.get_cached_data()
+
+    managers = [BulbManager(target) for target in data]
 
     # Connect to all the bulbs
     for manager in managers:
