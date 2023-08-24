@@ -1,5 +1,5 @@
 import asyncio
-from json import dump
+from json import dump, load
 from kasa import SmartBulb
 from kasa.discover import Discover
 from random import randint
@@ -14,10 +14,12 @@ class BulbManager:
     def __init__(self, target: str):
         self.target: str = target
         self.device: Optional[SmartBulb] = None
+        self.connected: bool = False
 
     async def connect(self):
         self.device = await BulbManager.get_device(self.target)
         await self.device.update()
+        self.connected = True
 
     async def off(self):
         await self.device.turn_off()
@@ -74,7 +76,7 @@ class BulbManager:
         Get the cached addresses
         '''
         with open("cache.json", "r") as f:
-            data = f.read()
+            data = load(f)
 
         return data
 
@@ -87,17 +89,20 @@ async def main():
 
     # Connect to all the bulbs
     for manager in managers:
-        print(f"Connecting to {manager.target}...")
-        await manager.connect()
-        await manager.on()
-        print(f"Connected.")
+        try:
+            print(f"Connecting to {manager.target}...")
+            await manager.connect()
+            await manager.on()
+            print(f"Connected.")
+        except:
+            print(f"Failed to connect to {manager.target}.")
 
     # Loop forever and set the bulbs to random colors
     while True:
         for manager in managers:
-            hue = randint(0, 360)
-
-            await manager.set_hsv(hue, 100, 100)
+            if manager.connected:
+                hue = randint(0, 360)
+                await manager.set_hsv(hue, 100, 100)
 
         sleep(0.1)
         
