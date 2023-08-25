@@ -4,7 +4,7 @@ from kasa import SmartBulb
 from kasa.discover import Discover
 from random import randint
 from time import sleep
-from typing import Optional
+from typing import Callable, Optional
 
 class BulbManager:
     '''
@@ -22,9 +22,11 @@ class BulbManager:
         self.connected = True
 
     async def off(self):
+        await self.device.update()
         await self.device.turn_off()
 
     async def on(self):
+        await self.device.update()
         await self.device.turn_on()
 
     async def set_hsv(self, hue: int, saturation: int, value: Optional[int] = None, transition: Optional[int] = None):
@@ -105,7 +107,3 @@ async def main():
                 await manager.set_hsv(hue, 100, 100)
 
         sleep(0.1)
-        
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
