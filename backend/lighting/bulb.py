@@ -1,7 +1,8 @@
 import asyncio
 from json import dump, load
-from kasa import SmartBulb
+from kasa import SmartDevice
 from kasa.discover import Discover
+from kasa.exceptions import SmartDeviceException
 from random import randint
 from time import sleep
 from typing import Callable, Optional
@@ -13,7 +14,7 @@ class BulbManager:
     '''
     def __init__(self, target: str):
         self.target: str = target
-        self.device: Optional[SmartBulb] = None
+        self.device: SmartDevice = None
         self.connected: bool = False
 
     async def connect(self):
@@ -30,6 +31,7 @@ class BulbManager:
         await self.device.turn_on()
 
     async def set_hsv(self, hue: int, saturation: int, value: Optional[int] = None, transition: Optional[int] = None):
+        await self.device.update()
         await self.device.set_hsv(hue, saturation, value, transition=transition)
 
         # We need to sleep for the transition time
@@ -66,8 +68,11 @@ class BulbManager:
         data = {}
 
         for addr, device in devices.items():
-            # We'll just store the alias so we know which address is which device
-            data[addr] = device.alias
+            # We'll just store the alias and type so we know which address is which device + what type it is
+            data[addr] = {
+                "alias": device.alias,
+                "type": device.hw_info.get("mic_type", None)
+            }
 
         with open("cache.json", "w") as f:
             dump(data, f, indent=4)
@@ -87,7 +92,7 @@ async def main():
     # First, get the cached data
     data = BulbManager.get_cached_data()
 
-    managers = [BulbManager(target) for target in data]
+    managers = [BulbManager(target) for target in data if data[target]["type"] == "IOT.SMARTBULB"]
 
     # Connect to all the bulbs
     for manager in managers:
@@ -101,9 +106,16 @@ async def main():
 
     # Loop forever and set the bulbs to random colors
     while True:
-        for manager in managers:
-            if manager.connected:
-                hue = randint(0, 360)
-                await manager.set_hsv(hue, 100, 100)
+        for i in range(len(managers)):
+            try:
+                if managers[i].connected:
+                    hue = randint(0, 360)
+                    value = randint(10, 30)
+                    await managers[i].set_hsv(hue, 100, value, 1000)
+            except SmartDeviceException:
+                print(f"Failed to set {managers[i].target}.")
+                managers[i].connected = False
 
-        sleep(0.1)
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
