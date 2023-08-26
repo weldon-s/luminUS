@@ -1,10 +1,12 @@
 import asyncio
 from flask import Flask
+from flask_cors import CORS
 from lighting.bulb import BulbManager
 
 bulbs: dict[str, BulbManager] = {}
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/<target>/new')
 async def new(target):

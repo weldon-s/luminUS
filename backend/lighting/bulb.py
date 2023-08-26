@@ -82,10 +82,13 @@ class BulbManager:
         '''
         Get the cached addresses
         '''
-        with open("cache.json", "r") as f:
-            data = load(f)
-
-        return data
+        try:
+            with open("cache.json", "r") as f:
+                data = load(f)
+    
+            return data
+        except:
+            return {}
 
 async def main():
     # We'll have a list of bulb managers
