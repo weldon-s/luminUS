@@ -18,9 +18,12 @@ class BulbManager:
         self.connected: bool = False
 
     async def connect(self):
-        self.device = await BulbManager.get_device(self.target)
-        await self.device.update()
-        self.connected = True
+        try:
+            self.device = await BulbManager.get_device(self.target)
+            await self.device.update()
+            self.connected = True
+        except:
+            self.connected = False
 
     async def off(self):
         await self.device.update()
@@ -45,7 +48,7 @@ class BulbManager:
         # In the future, maybe we'll have cached device addresses
         devices = await Discover.discover(target=target)
 
-        return devices[target]
+        return devices.get(target, None)
     
     @staticmethod
     async def populate_cache():

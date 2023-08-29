@@ -29,8 +29,9 @@ export class AppComponent implements OnInit {
 
   connect(ip: string): void {
     this.apiService.request(`${ip}/new`).subscribe((data) => {
-      //TODO check if connection was successful
-      this.devices[ip].connected = true;
+      if (data.success) {
+        this.devices[ip].connected = true;
+      }
     });
   }
 }
