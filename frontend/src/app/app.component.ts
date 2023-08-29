@@ -14,7 +14,8 @@ interface Device {
   styleUrls: ['./app.component.sass']
 })
 export class AppComponent implements OnInit {
-  title = 'luminUS';
+  BULB_TYPE = "IOT.SMARTBULB";
+
   devices: { [key: string]: Device };
 
   constructor(private apiService: ApiService) {

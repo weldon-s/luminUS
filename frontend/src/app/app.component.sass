@@ -27,3 +27,24 @@ main
     background-color: $light-yellow
     border-radius: 5px
     padding: 10px
+
+    &:hover
+        animation: hover 0.5s forwards
+
+    button
+        border: none
+        font-family: inherit
+        background-color: $medium-red
+        border-radius: 2px
+
+.disabled
+    background-color: $gray
+
+    &:hover
+        animation: none
+
+@keyframes hover
+    0%
+        background-color: $light-yellow
+    100%
+        background-color: $light-red

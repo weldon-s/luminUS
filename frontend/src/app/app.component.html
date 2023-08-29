@@ -1,13 +1,11 @@
 <header>
-  <h1>
-    {{title}}
-  </h1>
+  <h1>luminUS</h1>
 </header>
 
 <main>
   <h2>Your devices:</h2>
   <div id="device-container">
-    <div class="device" *ngFor="let device of devices | keyvalue">
+    <div *ngFor="let device of devices | keyvalue" class="device" [class.disabled]="device.value.type !== BULB_TYPE">
       {{device.value.alias}}
       <br />
       {{device.value.type}}
@@ -21,7 +19,7 @@
       </ng-container>
 
       <br />
-      <button *ngIf="!device.value.connected && device.value.type === 'IOT.SMARTBULB'" (click)="connect(device.key)">
+      <button *ngIf="!device.value.connected && device.value.type === BULB_TYPE" (click)="connect(device.key)">
         Connect
       </button>
     </div>
