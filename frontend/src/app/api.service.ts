@@ -10,7 +10,7 @@ export class ApiService {
 
   constructor(private http: HttpClient) { }
 
-  getDevices(): Observable<any> {
-    return this.http.get(`${this.serverUrl}/get_all`);
+  request(url: string): Observable<any> {
+    return this.http.get(`${this.serverUrl}/${url}`);
   }
 }

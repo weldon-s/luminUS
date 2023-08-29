@@ -7,8 +7,23 @@
 <main>
   <h2>Your devices:</h2>
   <div id="device-container">
-    <div *ngFor="let device of devices | keyvalue">
-      {{device.value.alias}} ({{device.value.type}})<br>
+    <div class="device" *ngFor="let device of devices | keyvalue">
+      {{device.value.alias}}
+      <br />
+      {{device.value.type}}
+      <br />
+      <ng-container *ngIf="device.value.connected">
+        Connected
+      </ng-container>
+
+      <ng-container *ngIf="!device.value.connected">
+        Not connected
+      </ng-container>
+
+      <br />
+      <button *ngIf="!device.value.connected && device.value.type === 'IOT.SMARTBULB'" (click)="connect(device.key)">
+        Connect
+      </button>
     </div>
   </div>
 

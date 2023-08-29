@@ -5,6 +5,7 @@ import { ApiService } from './api.service';
 interface Device {
   alias: string;
   type: string;
+  connected: boolean;
 }
 
 @Component({
@@ -21,8 +22,15 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.apiService.getDevices().subscribe((data) => {
+    this.apiService.request("get_all").subscribe((data) => {
       this.devices = data;
+    });
+  }
+
+  connect(ip: string): void {
+    this.apiService.request(`${ip}/new`).subscribe((data) => {
+      //TODO check if connection was successful
+      this.devices[ip].connected = true;
     });
   }
 }
