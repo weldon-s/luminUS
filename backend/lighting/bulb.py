@@ -3,19 +3,29 @@ from json import dump, load
 from kasa import SmartDevice
 from kasa.discover import Discover
 from kasa.exceptions import SmartDeviceException
+import nest_asyncio
 from random import randint
+from threading import Event, Thread
 from time import sleep
-from typing import Callable, Optional
+from typing import Optional, Union
+
+# value is optional, so we either have a tuple of hue, saturation, value or just hue, saturation
+ColorType = Union[tuple[int, int], tuple[int, int, int]]
+nest_asyncio.apply()
 
 class BulbManager:
     '''
-    Class for managing a single bulb
+    Class for managing a single bulb.
     We'll have more advanced functionality in the future but for now it just wraps functions from the library
     '''
     def __init__(self, target: str):
         self.target: str = target
         self.device: SmartDevice = None
         self.connected: bool = False
+
+        # These are for the random color loop
+        self._previous_color: Optional[ColorType] = None
+        self._color_event: Optional[Event] = None
 
     async def connect(self):
         try:
@@ -42,14 +52,50 @@ class BulbManager:
         if transition is not None:
             sleep(transition / 1000)
 
+    def start_random(self, colors: list[ColorType], interval: int):
+        '''
+        Start a random color loop
+        '''
+        self._color_event = Event()
+
+        t = Thread(target=self._get_color_setter_task(colors, interval), args=(self._color_event,))
+        t.start()
+
+    def stop_random(self):
+        '''
+        Stop the random color loop
+        '''
+        if self._color_event is not None:
+            self._color_event.set()
+
+
+    def _get_color_setter_task(self, colors: list[ColorType], interval: int):
+        '''
+        Get the task that sets the color
+        '''
+
+        def _run_color_change(event: Event):
+            # We'll have a loop that runs indefinitely until the event to stop is set
+            loop = asyncio.get_event_loop()
+
+            while not event.is_set():
+                color = colors[randint(0, len(colors) - 1)]
+
+                # Make sure we don't set the same color twice in a row
+                while color == self._previous_color:
+                    color = colors[randint(0, len(colors) - 1)]
+
+                loop.run_until_complete(self.set_hsv(*color, transition=interval))
+
+        return _run_color_change
+
     @staticmethod
     async def get_device(target: str):
         # We'll have the target address passed in to make it easier since discover is finicky
-        # In the future, maybe we'll have cached device addresses
         devices = await Discover.discover(target=target)
 
         return devices.get(target, None)
-    
+
     @staticmethod
     async def populate_cache():
         '''

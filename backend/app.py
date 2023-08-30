@@ -45,6 +45,22 @@ async def set_hsv(target, hue, saturation, value=None, transition=None):
 
     return await _wrap_action(bulbs[target].set_hsv(hue, saturation, value=value, transition=transition))
 
+@app.route('/<target>/start_random/<int:interval>')
+def start_random(target, interval):
+    if target not in bulbs:
+        return {"success": False, "message": "not connected"}
+
+    bulbs[target].start_random([[0, 100], [120, 100], [240, 100]], interval)
+    return {"success": True, "message": "success"}
+
+@app.route('/<target>/stop_random')
+async def stop_random(target):
+    if target not in bulbs:
+        return {"success": False, "message": "not connected"}
+
+    bulbs[target].stop_random()
+    return {"success": True, "message": "success"}
+
 @app.route('/discover_all')
 async def discover_all():
     await BulbManager.populate_cache()
