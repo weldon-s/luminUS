@@ -33,6 +33,27 @@ export class AppComponent implements OnInit {
       if (data.success) {
         this.devices[ip].connected = true;
       }
+      else {
+        alert(`Failed to connect to ${this.devices[ip].alias}`);
+      }
+    });
+  }
+
+  on(ip: string): void {
+    this.apiService.request(`${ip}/on`).subscribe((data) => {
+      if (data.success) { }
+      else {
+        alert(`Failed to turn on ${this.devices[ip].alias}`);
+      }
+    });
+  }
+
+  off(ip: string): void {
+    this.apiService.request(`${ip}/off`).subscribe((data) => {
+      if (data.success) { }
+      else {
+        alert(`Failed to turn off ${this.devices[ip].alias}`);
+      }
     });
   }
 }

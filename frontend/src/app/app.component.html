@@ -22,6 +22,15 @@
       <button *ngIf="!device.value.connected && device.value.type === BULB_TYPE" (click)="connect(device.key)">
         Connect
       </button>
+
+      <!--TODO make only one of these render at a time-->
+      <button *ngIf="device.value.connected" (click)="on(device.key)">
+        On
+      </button>
+
+      <button *ngIf="device.value.connected" (click)="off(device.key)">
+        Off
+      </button>
     </div>
   </div>
 
